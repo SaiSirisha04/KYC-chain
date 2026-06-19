@@ -1,4 +1,4 @@
-pragma solidity ^0.4.4;
+pragma solidity ^0.5.17;
 
 contract kyc {
 
@@ -49,7 +49,7 @@ contract kyc {
 
     Request[] allRequests;
 
-    function ifAllowed(string Uname, address bankAddress) public payable returns(bool) {
+    function ifAllowed(string memory Uname, address bankAddress) public payable returns(bool) {
         for(uint i = 0; i < allRequests.length; ++i) {
             if(stringsEqual(allRequests[i].uname, Uname) && allRequests[i].bankAddress == bankAddress && allRequests[i].isAllowed) {
                 return true;
@@ -58,7 +58,7 @@ contract kyc {
         return false;
     }
 
-    function getBankRequests(string Uname, uint ind) public payable returns(address) {
+    function getBankRequests(string memory Uname, uint ind) public payable returns(address) {
         uint j = 0;
         for(uint i=0;i<allRequests.length;++i) {
             if(stringsEqual(allRequests[i].uname, Uname) && j == ind && allRequests[i].isAllowed == false) {
@@ -66,10 +66,11 @@ contract kyc {
             }
             j ++;
         }
-        return 0x14e041521a40e32ed88b22c0f32469f5406d757a;
+        return address(0x0014e041521a40e32ed88b22c0f32469f5406d757a);
+
     }
 
-    function addRequest(string Uname, address bankAddress) public payable {
+    function addRequest(string memory Uname, address bankAddress) public payable {
         for(uint i = 0; i < allRequests.length; ++ i) {
             if(stringsEqual(allRequests[i].uname, Uname) && allRequests[i].bankAddress == bankAddress) {
                 return;
@@ -79,7 +80,7 @@ contract kyc {
         allRequests[allRequests.length - 1] = Request(Uname, bankAddress, false);
     }
 
-    function allowBank(string Uname, address bankAddress, bool ifallowed) public payable {
+    function allowBank(string memory Uname, address bankAddress, bool ifallowed) public payable {
         for(uint i = 0; i < allRequests.length; ++ i) {
             if(stringsEqual(allRequests[i].uname, Uname) && allRequests[i].bankAddress == bankAddress) {
                 if(ifallowed) {
@@ -97,7 +98,7 @@ contract kyc {
 
     //   internal function to compare strings
     
-    function stringsEqual(string storage _a, string memory _b) internal returns (bool) {
+    function stringsEqual(string storage _a, string memory _b) internal view returns (bool)  {
 		bytes storage a = bytes(_a);
 		bytes memory b = bytes(_b);
 		if (a.length != b.length)
@@ -126,7 +127,7 @@ contract kyc {
     //  returns 7 if no access rights to transaction request sender
     //  no check on access rights if network strength in zero
 
-    function addBank(string uname, address eth, string regNum) public payable returns(uint) {
+    function addBank(string memory uname, address eth, string memory regNum) public payable returns(uint) {
         if(allOrgs.length == 0 || isPartOfOrg()) {
             allOrgs.length ++;
             allOrgs[allOrgs.length - 1] = Organisation(uname, eth, 200, 0, regNum);
@@ -162,7 +163,7 @@ contract kyc {
     //  returns 1 if size limit of the database is reached
     //  returns 2 if customer already in network
 
-    function addCustomer(string Uname, string DataHash) public payable returns(uint) {
+    function addCustomer(string memory Uname, string memory DataHash) public payable returns(uint) {
         if(!isPartOfOrg())
             return 7;
         //  throw error if username already in use
@@ -184,7 +185,7 @@ contract kyc {
     //  returns 7 if no access rights to transaction request sender
     //  returns 1 if customer profile not in database
 
-    function removeCustomer(string Uname) public payable returns(uint) {
+    function removeCustomer(string memory Uname) public payable returns(uint) {
         if(!isPartOfOrg())
             return 7;
         for(uint i = 0; i < allCustomers.length; ++ i) {
@@ -208,7 +209,7 @@ contract kyc {
     //  returns 7 if no access rights to transaction request sender
     //  returns 1 if customer profile not in database
 
-    function modifyCustomer(string Uname,string DataHash) public payable returns(uint) {
+    function modifyCustomer(string memory Uname,string memory DataHash) public payable returns(uint) {
         if(!isPartOfOrg())
             return 7;
         for(uint i = 0; i < allCustomers.length; ++ i) {
@@ -224,7 +225,7 @@ contract kyc {
 
     // function to return customer profile data
 
-    function viewCustomer(string Uname) public payable returns(string) {
+    function viewCustomer(string memory Uname) public payable returns(string memory) {
         if(!isPartOfOrg())
             return "Access denied!";
         for(uint i = 0; i < allCustomers.length; ++ i) {
@@ -237,7 +238,7 @@ contract kyc {
 
     //  function to modify customer rating
 
-    function updateRatingCustomer(string Uname, bool ifIncrease) public payable returns(uint) {
+    function updateRatingCustomer(string memory Uname, bool ifIncrease) public payable returns(uint) {
         for(uint i = 0; i < allCustomers.length; ++ i) {
             if(stringsEqual(allCustomers[i].uname, Uname)) {
                 //update rating
@@ -294,16 +295,17 @@ contract kyc {
     //  function to validate bank log in
     //  returns null if username or password not correct
     //  returns bank name if correct
-    function checkBank(string Uname, address password) public payable returns(string) {
-        for(uint i = 0; i < allOrgs.length; ++ i) {
-            if(allOrgs[i].ethAddress == password && stringsEqual(allOrgs[i].name, Uname)) {
-                return "0";
-            }
+    function checkBank(string memory Uname, address ethAddress) public view returns (string memory) {
+    for (uint i = 0; i < allOrgs.length; i++) {
+        if (allOrgs[i].ethAddress == ethAddress && stringsEqual(allOrgs[i].name, Uname)) {
+            return allOrgs[i].name;
         }
-        return "null";
     }
+    return "null";
+}
 
-    function checkCustomer(string Uname, string password) public payable returns(bool) {
+
+    function checkCustomer(string memory Uname, string memory password) public payable returns(bool) {
         for(uint i = 0; i < allCustomers.length; ++ i) {
             if(stringsEqual(allCustomers[i].uname, Uname) && stringsEqual(allCustomers[i].password, password)) {
                 return true;
@@ -315,7 +317,7 @@ contract kyc {
         return false;
     }
 
-    function setPassword(string Uname, string password) public payable returns(bool) {
+    function setPassword(string memory Uname, string memory password) public payable returns(bool) {
         for(uint i=0;i < allCustomers.length; ++ i) {
             if(stringsEqual(allCustomers[i].uname, Uname) && stringsEqual(allCustomers[i].password, "null")) {
                 allCustomers[i].password = password;
@@ -327,7 +329,7 @@ contract kyc {
 
     // All getter functions
 
-    function getBankName(address ethAcc) public payable returns(string) {
+    function getBankName(address ethAcc) public payable returns(string memory) {
         for(uint i = 0; i < allOrgs.length; ++ i) {
             if(allOrgs[i].ethAddress == ethAcc) {
                 return allOrgs[i].name;
@@ -336,16 +338,16 @@ contract kyc {
         return "null";
     }
 
-    function getBankEth(string uname) public payable returns(address) {
+    function getBankEth(string memory uname) public payable returns(address) {
         for(uint i = 0; i < allOrgs.length; ++ i) {
             if(stringsEqual(allOrgs[i].name, uname)) {
                 return allOrgs[i].ethAddress;
             }
         }
-        return 0x14e041521a40e32ed88b22c0f32469f5406d757a;
+        return address(0x0014e041521a40e32ed88b22c0f32469f5406d757a);
     }
 
-    function getCustomerBankName(string Uname) public payable returns(string) {
+    function getCustomerBankName(string memory Uname) public payable returns(string memory) {
         for(uint i = 0;i < allCustomers.length; ++ i) {
             if(stringsEqual(allCustomers[i].uname, Uname)) {
                 return getBankName(allCustomers[i].bank);
@@ -353,7 +355,7 @@ contract kyc {
         }
     }
 
-    function getBankReg(address ethAcc) public payable returns(string) {
+    function getBankReg(address ethAcc) public payable returns(string memory) {
         for(uint i = 0; i < allOrgs.length; ++ i) {
             if(allOrgs[i].ethAddress == ethAcc) {
                 return allOrgs[i].regNumber;
@@ -380,7 +382,7 @@ contract kyc {
         return 0;
     }
 
-    function getCustomerBankRating(string Uname) public payable returns(uint) {
+    function getCustomerBankRating(string memory Uname) public payable returns(uint) {
         for(uint i = 0;i < allCustomers.length; ++ i) {
             if(stringsEqual(allCustomers[i].uname, Uname)) {
                 return getBankRating(allCustomers[i].bank);
@@ -388,7 +390,7 @@ contract kyc {
         }
     }
 
-    function getCustomerRating(string Uname) public payable returns(uint) {
+    function getCustomerRating(string memory Uname) public payable returns(uint) {
         for(uint i = 0; i < allCustomers.length; ++ i) {
             if(stringsEqual(allCustomers[i].uname, Uname)) {
                 return allCustomers[i].rating;
